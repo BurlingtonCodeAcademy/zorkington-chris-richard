@@ -15,7 +15,7 @@ let states = {
   'roomThree': { canChangeTo: [ 'roomOne' ] }
 };
 
-let currentState = "green";
+let currentState = "roomOne";
 
 function enterState(newState) {
   let validTransitions = states[currentState].canChangeTo;
@@ -33,7 +33,16 @@ async function start() {
 You are standing on Main Street between Church and South Winooski.
 There is a door here. A keypad sits on the handle.
 On the door is a handwritten sign.`;
-  let answer = await ask(welcomeMessage);
+  let answer = await ask(welcomeMessage+"\nWhat would you like to do?\n>_");
   console.log('Now write your code to make this work!');
   process.exit();
+}
+
+let roomOne = {
+  name: "182 Main St.",
+  description: `You are standing on Main Street between Church and South Winooski.
+  There is a door here. A keypad sits on the handle.
+  On the door is a handwritten sign.`,
+  actions: ["read", "sign", "take", "open", "door", "enter", "code", "12345", "key"],
+  canChangeTo: ['roomTwo'],
 }
