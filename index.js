@@ -28,21 +28,22 @@ class Item{
     this.canPickUp = canPickUp;
   }
 }
+const paper = new Item("seven days", "You are carrying seven days, Vermonts Alt-Weekly", `You pick up the paper and leaf through it looking for comics and ignoring the articles, just like everybody else does.`)
 
 //Rooms
-let roomOne = new Room(
+let MainSt = new Room(
   "182 Main St.",
   `You are standing on Main Street between Church and South Winooski.
   There is a door here. A keypad sits on the handle.
   On the door is a handwritten sign.`,
+  ['test'],//move read sign to actions and make inventory an array
+  ['foyer'],
   {'read sign': `The sign says "Welcome to Burlington Code Academy! Come on 
   up to the third floor. If the door is locked, use the code
-  12345."`},
-  ['roomTwo'],
-  {12345: 'roomTwo', 'take sign': "That would be selfish, how would other students find their way?", 'open door': `The door is locked. There is a keypad on the door handle.`} 
+  12345."`, 12345: 'foyer', 'take sign': "That would be selfish, how would other students find their way?", 'open door': `The door is locked. There is a keypad on the door handle.`} 
 );
 
-let roomTwo = new Room(
+let foyer = new Room(
   '182 Main St. - Foyer',
   `You are in a foyer. Or maybe it's an antechamber. Or a 
   vestibule. Or an entryway. Or an atrium. Or a narthex.
@@ -50,24 +51,23 @@ let roomTwo = new Room(
   and just call it a foyer. In Vermont, this is pronounced
   "FO-ee-yurr".
   A copy of Seven Days lies in a corner.`,
-  {'seven days': `You pick up the paper and leaf through it looking for comics 
-  and ignoring the articles, just like everybody else does.`}, //inventory
-  ['roomOne', 'roomThree'],
-  {} //actions
+  [paper], //inventory
+  ['MainSt', 'roomThree'],
+  {'seven days': paper.canPickUp} //actions
   );
 
   //Do we need a lookup table for [current].description to work? Marshall mentioned that you can't have the first 
   //key be a variable unless you use a lookup table to convert the string to an object by naming itself
   const roomLookupTable = {
-    roomOne: roomOne,
-    roomTwo: roomTwo,
+    MainSt: MainSt,
+    foyer: foyer,
     //roomThree: roomThree
   }
 
   
   //player
   let player = {
-    currentState: 'roomOne',
+    currentState: 'MainSt',
     playerInventory: [],
   //Will need to add functions for interacting - pickUp, drop, look, read, etc...
   actions: {
@@ -76,8 +76,8 @@ let roomTwo = new Room(
     },
     read(action, itemName){
       //console.log(`The value of passed argument in the read function was: ${itemName}`);
-      if(Object.keys(roomLookupTable[player.currentState].roomInventory).includes(action + " " + itemName)){
-        console.log(roomLookupTable[player.currentState].roomInventory[action + " " + itemName]);
+      if(Object.keys(roomLookupTable[player.currentState].actions).includes(action + " " + itemName)){
+        console.log(roomLookupTable[player.currentState].actions[action + " " + itemName]);
         getInput();
       } else {
         console.log(`I'm sorry I can't read the ${itemName}`);
@@ -85,7 +85,7 @@ let roomTwo = new Room(
       }
     },
     enter(action, code) {
-      if(code === '12345'){
+      if(code === '12345'){ //move to MainSt actions
         console.log('Success! The door opens. You enter the foyer and the door shuts behind you.')
         enterState(roomLookupTable[player.currentState].actions[code]);
       } else {
@@ -95,10 +95,31 @@ let roomTwo = new Room(
     },
     take(action, itemName){ 
       if(Object.keys(roomLookupTable[player.currentState].actions).includes(action + " " + itemName)){
-      console.log(roomLookupTable[player.currentState].actions[action + " " + itemName]);
-      getInput();
+        console.log(roomLookupTable[player.currentState].actions[action + " " + itemName]);
+        getInput();
+      } else if(roomLookupTable[player.currentState].roomInventory.includes(itemName)){
+        let index = roomLookupTable[player.currentState].roomInventory.indexOf(itemName); //finds the item in the roomInventory
+        player.playerInventory.push(roomLookupTable[player.currentState].roomInventory[index]); //pushes the item to the playerInventory based on the index
+        roomLookupTable[player.currentState].roomInventory.splice(index, 1); //removes the item from the roomInventory
+        console.log(`You took the ${itemName}`);
+        getInput();
       } else {
+        console.log(roomLookupTable[player.currentState].roomInventory);
       console.log(`I'm sorry I can't take the ${itemName}`);
+      getInput();
+     }
+    }, 
+    
+    drop(action, itemName){ 
+      console.log(player.playerInventory);
+      if(player.playerInventory.includes(itemName)){
+        let index = player.playerInventory.indexOf(itemName);
+        roomLookupTable[player.currentState].roomInventory.push(player.playerInventory[index]); 
+        player.playerInventory.splice(index, 1);;
+        console.log(`You dropped the ${itemName}`);
+        getInput();
+      } else {
+      console.log(`I'm sorry you can't drop the ${itemName}`);
       getInput();
      }
     }, 
@@ -111,9 +132,10 @@ let roomTwo = new Room(
         console.log(`I'm sorry I can't open the ${itemName}`);
         getInput();
        }
-    }
-  }
+    }, 
+  } 
 }
+
 
 
 
@@ -141,17 +163,29 @@ function newRoom(){
 
 async function getInput() {
   let input = await ask("What would you like to do?\n>_");
+  console.log(input);
   let arrInput = input.toLowerCase().split(" ");
+  if(arrInput[1] === 'seven' && arrInput[2] === 'days'){
+    arrInput.push('seven days');
+  }
   checkInput(arrInput[0], arrInput[arrInput.length-1], arrInput);
 }
 
 
 function checkInput(arg1, arg2, arrInput){
-  if(Object.keys(player.actions).includes(arg1)){
-    //console.log(`The player action array does include: ${arg1}`);
+  if(arg1 === 'i' || arg1 === 'inventory' || (arg1 === 'take' && arg2 === 'inventory')){
+      if(player.playerInventory.length < 1){
+        console.log("You have nothing.")
+        getInput();
+      } else {
+        console.log(`You have: ${player.playerInventory.join(" ")}`)
+        //console.log(player.playerInventory)
+        getInput();
+      }
+  }else if(Object.keys(player.actions).includes(arg1)){
     player.actions[arg1](arg1, arg2);
   }else{
-    console.log(`I'm sorry I don't know how to ${arrInput}`);
+    console.log(`I'm sorry I don't know how to ${arrInput.join(" ")}`);
     getInput();
   }
 }
