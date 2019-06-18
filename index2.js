@@ -68,6 +68,20 @@ class Player {
     getInput();
   } 
 
+  drop(item){ 
+    if(player.playerInventory.includes(lookUpItems[item])){
+      console.log(`The player does have ${item} in their inventory`);
+      let index = player.playerInventory.indexOf(lookUpItems[item]);
+      player.currentState.roomInventory.push(player.playerInventory[index]); 
+      player.playerInventory.splice(index, 1);;
+      console.log(`You dropped the ${item}`);
+      getInput();
+    } else {
+    console.log(`I'm sorry you can't drop the ${itemName}`);
+    getInput();
+   }
+  }
+
   open(item){
     if(lookUpItems[item].openText){
     console.log(lookUpItems[item].openText);
@@ -94,7 +108,7 @@ class Player {
       return getInput();
     } else {
       player.playerInventory.forEach(function(element) {
-        console.log(element.name);
+        console.log(element.inventoryText);
       });
       return getInput();
     }
@@ -110,16 +124,18 @@ let player = new Player(
 //Items
 const paper = new Item(
 "Seven Days", 
-"Some kind of newspaper", 
+"Some kind of newspaper with bands you've never heard of.", 
 true,
 `You pick up the paper and leaf through it looking for comics and ignoring the articles, just like everybody else does.`,
-"You are carrying seven days, Vermonts Alt-Weekly",
+"You are carrying Seven Days, Vermonts Alt-Weekly",
 "You flip through the pages. Nothing catches your eye."
 );
 
 const sign = new Item(
   "Sign", 
-  "Welcome to Burlington Code Academy! Come on up to the third floor. If the door is locked, use the code 12345",
+  `Welcome to Burlington Code Academy! Come on 
+up to the third floor. If the door is locked, use the code 
+12345`,
   false,
   "That would be selfish. How will other students find their way?",
   "",
@@ -139,8 +155,8 @@ const door = new Item(
 let mainSt = new Room(
   "182 Main St.",
   `You are standing on Main Street between Church and South Winooski.
-  There is a door here. A keypad sits on the handle.
-  On the door is a handwritten sign.`,
+There is a door here. A keypad sits on the handle.
+On the door is a handwritten sign.`,
   [sign, door],
   ['mainSt', 'foyer']
   );
@@ -178,6 +194,7 @@ function enterState(newState, currentRoom) {
   // console.log(`enterState with ${newState} as the argument`);
   if(roomLookupTable[currentRoom].canChangeTo.includes(newState)){
     player.currentState = roomLookupTable[newState];
+    console.log(player.currentState.name);
     console.log(player.currentState.description);
     getInput();
   }else{
@@ -192,7 +209,7 @@ function start() {
 }
 
 async function getInput() {
-  let input = await ask("What would you like to do?\n>_");
+  let input = await ask("\nWhat would you like to do?\n>_");
   let arrInput = input.toLowerCase().split(" ");
   if(arrInput[1] === 'seven' && arrInput[2] === 'days'){
     arrInput.push('seven days');
