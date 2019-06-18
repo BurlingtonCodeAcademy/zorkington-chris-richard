@@ -52,8 +52,7 @@ let mainSt = new Room(
   There is a door here. A keypad sits on the handle.
   On the door is a handwritten sign.`,
   [sign],
-  ['mainSt', 'foyer']
-  );
+  ['mainSt', 'foyer'])
 
   let foyer = new Room(
   '182 Main St. - Foyer',
@@ -181,20 +180,6 @@ let mainSt = new Room(
       getInput();
      }
     }, 
-    
-    drop(action, itemName){ 
-      console.log(player.playerInventory);
-      if(player.playerInventory.includes(itemName)){
-        let index = player.playerInventory.indexOf(itemName);
-        roomLookupTable[player.currentState].roomInventory.push(player.playerInventory[index]); 
-        player.playerInventory.splice(index, 1);;
-        console.log(`You dropped the ${itemName}`);
-        getInput();
-      } else {
-      console.log(`I'm sorry you can't drop the ${itemName}`);
-      getInput();
-     }
-    }, 
 
     open(action, itemName) {
       if(Object.keys(roomLookupTable[player.currentState].actions).includes(action + " " + itemName)){
@@ -206,7 +191,6 @@ let mainSt = new Room(
        }
     }, 
   } 
-
 
 
 
