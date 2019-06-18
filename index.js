@@ -216,6 +216,7 @@ function start() {
 
 async function getInput() {
   let input = await ask("What would you like to do?\n>_");
+  console.log(input);
   let arrInput = input.toLowerCase().split(" ");
   if(arrInput[1] === 'seven' && arrInput[2] === 'days'){
     arrInput.push('seven days');
