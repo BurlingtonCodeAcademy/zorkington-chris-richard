@@ -87,7 +87,7 @@ let mainSt = new Room(
     }
 
     get actions(actionToDo, item) {
-      return this[actionToDo] ? this.actionToDo.bind(this) : `I do not know how to do ${actionToDo}`
+      return this[actionToDo] ? this.actionToDo(item) : `I do not know how to do ${actionToDo}`
     }
 
     look(itemName) {
