@@ -42,12 +42,12 @@ class Player {
   }
 
   look() {
-    console.log(this.currentState.description);
+    console.log(roomLookupTable[this.currentState].description);
     getInput();
   }
 
   read(item){
-   if(this.currentState.roomInventory.includes(lookUpItems[item]) || this.playerInventory.includes(lookUpItems[item])){
+   if(roomLookupTable[this.currentState].roomInventory.includes(lookUpItems[item]) || this.playerInventory.includes(lookUpItems[item])){
     console.log(lookUpItems[item].description);
    }else{
       console.log(`I'm sorry I can't read the ${item}`);
@@ -56,11 +56,12 @@ class Player {
   }
 
   take(item){
-    if(this.currentState.roomInventory.includes(lookUpItems[item]) && lookUpItems[item].canPickUp){
-      this.playerInventory.push(this.currentState.roomInventory[this.currentState.roomInventory.indexOf(lookUpItems[item])]);
+    if(roomLookupTable[this.currentState].roomInventory.includes(lookUpItems[item]) && lookUpItems[item].canPickUp){
+      let index = roomLookupTable[this.currentState].roomInventory.indexOf(lookUpItems[item])
+      this.playerInventory.push(roomLookupTable[this.currentState].roomInventory[index]);
       // console.log(this.playerInventory);
       console.log(lookUpItems[item].pickUpText)
-    }else if(this.currentState.roomInventory.includes(lookUpItems[item])){
+    }else if(roomLookupTable[this.currentState].roomInventory.includes(lookUpItems[item])){
       console.log(lookUpItems[item].pickUpText);
     }else{
       console.log(`I'm sorry I can't take the ${item}.`);
@@ -70,9 +71,9 @@ class Player {
 
   drop(item){ 
     if(player.playerInventory.includes(lookUpItems[item])){
-      console.log(`The player does have ${item} in their inventory`);
+      //console.log(`The player does have ${item} in their inventory`);
       let index = player.playerInventory.indexOf(lookUpItems[item]);
-      player.currentState.roomInventory.push(player.playerInventory[index]); 
+      roomLookupTable[this.currentState].roomInventory.push(player.playerInventory[index]); 
       player.playerInventory.splice(index, 1);;
       console.log(`You dropped the ${item}`);
       getInput();
@@ -92,12 +93,15 @@ class Player {
   }
 
   code(number){
-    if(this.currentState === mainSt && number === '12345'){
+    if(roomLookupTable[this.currentState] === mainSt && number === '12345'){
       console.log(`Success! The door opens. You enter the foyer and the door
       shuts behind you.`);
       enterState('foyer', 'mainSt');
-    }else{
+    }else if(roomLookupTable[this.currentState] === mainSt && number !== '12345'){
       console.log(`Bzzzzt! The door is still locked.`);
+      getInput();
+    }else{
+      console.log('There is no keypad on this side.');
       getInput();
     }
   }
@@ -113,13 +117,30 @@ class Player {
       return getInput();
     }
   }
-}
+  move(newState){
+    if(Object.keys(roomLookupTable).includes(newState) && this.currentState !== "mainSt"){
+    console.log(this.currentState);
+      enterState(newState, this.currentState);
+    console.log(this.currentState.description)
+    } else {
+      console.log(`I can't move to ${newState}`)
+    }
+   getInput();
+  }
 
-//Player creation
-let player = new Player(
-'mainSt',
-[]
-);
+  async xyzzy(){
+    let newRoom = await ask("Which room would you like to go to mainSt or foyer?")
+    if(Object.keys(roomLookupTable).includes(newRoom)){
+      this.currentState = newRoom;
+      console.log(roomLookupTable[player.currentState].name);
+      console.log(roomLookupTable[player.currentState].description);
+    }else{
+          console.log(`That isn't a choice. Please try again`);
+          return xyzzy();
+  }
+   return getInput();
+  }
+}
 
 //Items
 const paper = new Item(
@@ -143,7 +164,7 @@ up to the third floor. If the door is locked, use the code
 );
 
 const door = new Item(
-  "door", 
+  "door",
   "182 Main St",
   false,
   "It's locked and I don't know how you'd carry it.",
@@ -170,16 +191,22 @@ and just call it a foyer. In Vermont, this is pronounced
 "FO-ee-yurr".
 A copy of Seven Days lies in a corner.`,
 [paper],
-['mainSt', 'roomThree'],
+['street', 'roomThree'],
 );
 
   //Do we need a lookup table for [current].description to work? Marshall mentioned that you can't have the first 
-  //key be a variable unless you use a lookup table to convert the string to an object by naming itself
+  //key be a variable unless you use a lookup table to convert the strimovng to an object by naming itself
   const roomLookupTable = {
     mainSt: mainSt,
     foyer: foyer,
+    "street": mainSt
     //roomThree: roomThree
   }
+  
+  let player = new Player(
+    'street',
+    []
+    );
   
   const lookUpItems = {
      paper: paper,
@@ -190,12 +217,13 @@ A copy of Seven Days lies in a corner.`,
 
 //Transition between rooms
 function enterState(newState, currentRoom) {
-  // console.log(`Entering enterState() the currenState is: ${player.currentState}`);
+   // console.log(roomLookupTable[currentRoom].canChangeTo)
+  // console.log(`Entering enterState() the currenState is: ${roomLookupTable[currentRoom].canChangeTo}`);
   // console.log(`enterState with ${newState} as the argument`);
   if(roomLookupTable[currentRoom].canChangeTo.includes(newState)){
-    player.currentState = roomLookupTable[newState];
-    console.log(player.currentState.name);
-    console.log(player.currentState.description);
+    player.currentState = newState;
+    console.log(roomLookupTable[player.currentState].name);
+    console.log(roomLookupTable[player.currentState].description);
     getInput();
   }else{
     throw 'Invalid state transition attempted - from ' + currentRoom + ' to ' + newState;
